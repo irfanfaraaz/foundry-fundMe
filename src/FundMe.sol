@@ -17,8 +17,8 @@ contract FundMe {
 
     error MinEthRequired();
 
-    address[] funders;
-    mapping(address funder => uint256 amountFunded) public addressToAmountFunded;
+    address[] private s_funders;
+    mapping(address funder => uint256 amountFunded) private s_addressToAmountFunded;
 
     uint256 public constant MIN_USD = 5e18;
 
@@ -26,16 +26,16 @@ contract FundMe {
         if (msg.value.getConversionRate(s_priceFeed) < MIN_USD) {
             revert MinEthRequired();
         }
-        funders.push(msg.sender);
-        addressToAmountFunded[msg.sender] += msg.value;
+        s_funders.push(msg.sender);
+        s_addressToAmountFunded[msg.sender] += msg.value;
     }
 
     function withdraw() public onlyOwner {
-        for (uint256 i = 0; i < funders.length; i++) {
-            address funder = funders[i];
-            addressToAmountFunded[funder] -= addressToAmountFunded[funder];
+        for (uint256 i = 0; i < s_funders.length; i++) {
+            address funder = s_funders[i];
+            s_addressToAmountFunded[funder] -= s_addressToAmountFunded[funder];
         }
-        funders = new address[](0);
+        s_funders = new address[](0);
 
         //withdraw
         // transfer
@@ -61,5 +61,13 @@ contract FundMe {
 
     fallback() external payable {
         fund();
+    }
+
+    function getAddressToAmountFunded(address funder) external view returns (uint256) {
+        return s_addressToAmountFunded[funder];
+    }
+
+    function getFunder(uint256 index) external view returns (address) {
+        return s_funders[index];
     }
 }
