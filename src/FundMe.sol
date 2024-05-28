@@ -30,6 +30,18 @@ contract FundMe {
         s_addressToAmountFunded[msg.sender] += msg.value;
     }
 
+    function cheaperWithdraw() public onlyOwner {
+        uint256 fundersLength = s_funders.length;
+        for (uint256 i = 0; i < fundersLength; i++) {
+            address funder = s_funders[i];
+            s_addressToAmountFunded[funder] -= s_addressToAmountFunded[funder];
+        }
+        s_funders = new address[](0);
+
+        (bool callSuccess,) = payable(msg.sender).call{value: address(this).balance}("");
+        require(callSuccess, "Call failed");
+    }
+
     function withdraw() public onlyOwner {
         for (uint256 i = 0; i < s_funders.length; i++) {
             address funder = s_funders[i];
@@ -39,11 +51,11 @@ contract FundMe {
 
         //withdraw
         // transfer
-        payable(msg.sender).transfer(address(this).balance);
+        // payable(msg.sender).transfer(address(this).balance);
 
         // send
-        bool sendSuccess = payable(msg.sender).send(address(this).balance);
-        require(sendSuccess, "Send failed");
+        // bool sendSuccess = payable(msg.sender).send(address(this).balance);
+        // require(sendSuccess, "Send failed");
 
         // call
         (bool callSuccess,) = payable(msg.sender).call{value: address(this).balance}("");
@@ -69,5 +81,9 @@ contract FundMe {
 
     function getFunder(uint256 index) external view returns (address) {
         return s_funders[index];
+    }
+
+    function getOwner() external view returns (address) {
+        return i_owner;
     }
 }
